@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RxLogic お試し（EP01）</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@300;400&display=swap');
+
+:root {
+  --bg:#f7f5f0; --bg2:#ffffff; --bg3:#f0ede6; --border:#ddd9d0;
+  --text:#1a1a1a; --muted:#6b6560;
+  --accent:#c8860a; --accent2:#d4610c;
+  --teal:#0e7a6e; --blue:#1a5fa8;
+  --red:#c0392b; --green:#1a6e3a; --purple:#5a2d8a;
+  --gold:#c8860a;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 6px 28px rgba(0,0,0,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.75;}
+.screen{display:none;} .screen.active{display:block;}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;border-bottom:2px solid var(--border);position:sticky;top:0;background:rgba(247,245,240,.97);backdrop-filter:blur(8px);z-index:100;box-shadow:0 1px 8px rgba(0,0,0,.06);}
+.logo{font-family:'DM Mono',monospace;font-size:20px;color:var(--accent);letter-spacing:-.02em;}
+.logo span{color:var(--text);opacity:.5;}
+.nav-r{display:flex;gap:10px;align-items:center;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:8px;font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all .18s;border:none;font-weight:500;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#a06d08;transform:translateY(-1px);box-shadow:0 4px 16px rgba(200,134,10,.3);}
+.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-gold{background:var(--accent);color:#fff;font-weight:700;}
+.btn-gold:hover{background:#a06d08;box-shadow:0 4px 16px rgba(200,134,10,.3);}
+.btn-admin{background:#fff3f0;border:1.5px solid #f4a09a;color:var(--red);font-family:'DM Mono',monospace;font-size:12px;}
+
+/* HERO */
+.hero{padding:80px 48px 64px;max-width:860px;margin:0 auto;}
+.kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(200,134,10,.08);border:1.5px solid rgba(200,134,10,.25);border-radius:24px;padding:6px 18px;font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);margin-bottom:24px;letter-spacing:.04em;}
+.kicker::before{content:'●';font-size:8px;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-family:'Shippori Mincho',serif;font-size:clamp(28px,4vw,48px);font-weight:800;line-height:1.22;letter-spacing:-.02em;margin-bottom:20px;color:var(--text);}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:16px;color:var(--muted);max-width:560px;line-height:1.9;margin-bottom:32px;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;}
+.hero-note{font-size:13px;color:var(--muted);margin-top:14px;}
+
+/* STATS */
+.stats{display:flex;gap:48px;padding:28px 48px;border-top:2px solid var(--border);border-bottom:2px solid var(--border);max-width:860px;margin:0 auto;flex-wrap:wrap;background:#fff;}
+.stat-num{font-family:'Shippori Mincho',serif;font-size:28px;font-weight:700;color:var(--accent);}
+.stat-lbl{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-top:2px;}
+
+/* EP LIST */
+.ep-sec{padding:64px 48px;max-width:860px;margin:0 auto;}
+.sec-lbl{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.sec-ttl{font-family:'Shippori Mincho',serif;font-size:26px;font-weight:700;color:var(--text);margin-bottom:28px;}
+.ep-list{display:flex;flex-direction:column;gap:4px;}
+.ep-row{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:18px;padding:16px 20px;border-radius:10px;cursor:pointer;transition:all .18s;border:2px solid transparent;background:#fff;}
+.ep-row:hover{border-color:var(--border);box-shadow:var(--shadow);}
+.ep-row.free:hover{border-color:rgba(200,134,10,.35);background:#fffdf7;}
+.ep-row.locked{opacity:.55;cursor:default;}
+.ep-row.locked:hover{background:#fff;border-color:transparent;box-shadow:none;}
+.ep-n{font-family:'DM Mono',monospace;font-size:20px;font-weight:400;color:#ccc;text-align:right;}
+.ep-row.free .ep-n{color:var(--accent);}
+.ep-info{display:flex;flex-direction:column;gap:3px;}
+.ep-lv{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;}
+.ep-ttl{font-size:15px;font-weight:600;line-height:1.4;color:var(--text);}
+.ep-dsc{font-size:13px;color:var(--muted);line-height:1.6;}
+.ep-tags{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;}
+.ep-tag{font-size:11px;padding:2px 9px;border-radius:20px;font-family:'DM Mono',monospace;border:1.5px solid;}
+.ep-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.ep-min{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+.play-ic{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;}
+.lock-ic{font-size:16px;color:#ccc;}
+
+/* FOOTER */
+.l-footer{padding:36px 48px;border-top:2px solid var(--border);background:#fff;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;font-family:'DM Mono',monospace;flex-wrap:wrap;gap:12px;}
+
+/* PLAYER */
+#player{min-height:100vh;display:flex;flex-direction:column;background:var(--bg);}
+.p-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(247,245,240,.97);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.p-back{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);cursor:pointer;transition:color .15s;}
+.p-back:hover{color:var(--accent);}
+.p-ep-info{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.p-ep-n{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+.p-ep-t{font-size:14px;font-weight:600;color:var(--text);}
+.p-prog{display:flex;align-items:center;gap:10px;}
+.p-prog-bar{width:110px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.p-prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s;}
+.p-prog-txt{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+.p-body{display:grid;grid-template-columns:260px 1fr;flex:1;min-height:0;}
+.p-content{padding:40px 48px 100px;overflow-y:auto;max-width:700px;}
+.p-sidebar{background:#fff;border-right:2px solid var(--border);padding:20px 16px;overflow-y:auto;position:sticky;top:57px;height:calc(100vh - 57px);}
+
+/* CONVERSATION */
+.msg-narrator{font-size:15px;color:var(--muted);line-height:1.9;margin-bottom:22px;padding-left:16px;border-left:3px solid var(--border);}
+.msg-q{background:linear-gradient(135deg,rgba(200,134,10,.07),rgba(212,97,12,.04));border:2px solid rgba(200,134,10,.25);border-radius:14px 14px 14px 4px;padding:18px 22px;margin-bottom:14px;}
+.msg-q-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
+.msg-q-txt{font-size:16px;color:var(--text);line-height:1.75;font-weight:600;}
+.choices{display:flex;flex-direction:column;gap:9px;margin-bottom:28px;}
+.choice-btn{display:flex;align-items:center;gap:13px;padding:13px 18px;border-radius:10px;background:#fff;border:2px solid var(--border);cursor:pointer;transition:all .18s;text-align:left;font-family:'Noto Sans JP',sans-serif;font-size:14px;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.choice-btn:hover{border-color:var(--accent);background:rgba(200,134,10,.04);transform:translateY(-1px);box-shadow:var(--shadow);}
+.choice-btn.correct{border-color:var(--green);background:rgba(26,110,58,.06);color:var(--green);}
+.choice-btn.wrong{border-color:var(--red);background:rgba(192,57,43,.05);color:var(--red);}
+.agree-wrap{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+.agree-btn{padding:10px 22px;border-radius:28px;background:#fff;border:2px solid var(--border);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:14px;color:var(--muted);transition:all .18s;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.agree-btn:hover{border-color:var(--teal);color:var(--teal);background:rgba(14,122,110,.04);}
+.agree-btn.active{background:rgba(14,122,110,.08);border-color:var(--teal);color:var(--teal);font-weight:600;}
+.msg-resp{background:#fff;border:2px solid var(--border);border-radius:4px 14px 14px 14px;padding:16px 20px;margin-bottom:22px;font-size:14px;color:var(--text);line-height:1.85;box-shadow:var(--shadow);animation:fadeUp .35s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.reveal-card{background:rgba(200,134,10,.05);border:2px solid rgba(200,134,10,.2);border-radius:12px;padding:20px 22px;margin-bottom:22px;animation:fadeUp .4s ease;}
+.reveal-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+.reveal-txt{font-size:14px;color:var(--text);line-height:1.9;}
+.script-card{background:rgba(14,122,110,.05);border:2px solid rgba(14,122,110,.2);border-radius:10px;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.9;color:var(--text);animation:fadeUp .4s ease;}
+.script-card b{display:block;font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;font-weight:700;}
+.warn-card{background:rgba(192,57,43,.05);border:2px solid rgba(192,57,43,.2);border-radius:10px;padding:16px 18px;margin-bottom:18px;font-size:14px;color:var(--red);line-height:1.8;animation:fadeUp .4s ease;}
+.warn-card b{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;font-weight:700;}
+.cmp-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px;animation:fadeUp .4s ease;border:2px solid var(--border);border-radius:10px;overflow:hidden;}
+.cmp-tbl th{background:var(--bg3);color:var(--text);padding:10px 13px;text-align:left;font-size:12px;font-family:'DM Mono',monospace;border-bottom:2px solid var(--border);font-weight:600;}
+.cmp-tbl td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;}
+.cmp-tbl tr:last-child td{border-bottom:none;}
+.cmp-tbl tr:hover td{background:rgba(200,134,10,.03);}
+.ep-end{text-align:center;padding:40px 0 20px;border-top:2px solid var(--border);margin-top:36px;animation:fadeUp .5s ease;}
+.ep-end-ttl{font-family:'Shippori Mincho',serif;font-size:22px;font-weight:700;margin-bottom:8px;color:var(--text);}
+.ep-end-sub{font-size:15px;color:var(--muted);margin-bottom:26px;}
+.ep-end-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+/* SIDEBAR */
+.sb-ttl{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;}
+.sb-list{display:flex;flex-direction:column;gap:2px;}
+.sb-ep{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:8px;cursor:pointer;transition:background .15s;}
+.sb-ep:hover{background:var(--bg3);}
+.sb-ep.cur{background:rgba(200,134,10,.1);border:1px solid rgba(200,134,10,.2);}
+.sb-ep.lkd{opacity:.4;cursor:default;}
+.sb-ep.lkd:hover{background:transparent;}
+.sb-n{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);flex-shrink:0;width:22px;}
+.sb-t{font-size:12px;line-height:1.4;color:var(--text);}
+.sb-lv{font-size:11px;font-family:'DM Mono',monospace;margin-top:2px;}
+
+/* PAYWALL */
+.pw-overlay{display:none;position:fixed;inset:0;background:rgba(50,40,20,.6);backdrop-filter:blur(6px);z-index:300;align-items:center;justify-content:center;}
+.pw-overlay.show{display:flex;}
+.pw-card{background:#fff;border:2px solid rgba(200,134,10,.3);border-radius:18px;padding:40px;max-width:420px;width:90%;text-align:center;animation:fadeUp .3s ease;box-shadow:var(--shadow-lg);}
+.pw-lock{font-size:36px;margin-bottom:14px;}
+.pw-ttl{font-family:'Shippori Mincho',serif;font-size:22px;font-weight:700;margin-bottom:8px;color:var(--text);}
+.pw-desc{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.8;}
+.pw-plans{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.pw-plan{background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:16px 12px;cursor:pointer;transition:all .18s;text-align:center;}
+.pw-plan:hover{border-color:var(--accent);}
+.pw-plan.sel{border-color:var(--accent);background:rgba(200,134,10,.06);}
+.pw-plan-name{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:5px;}
+.pw-plan-price{font-family:'Shippori Mincho',serif;font-size:22px;font-weight:700;color:var(--accent);}
+.pw-plan-price sub{font-size:12px;color:var(--muted);font-family:'Noto Sans JP',sans-serif;}
+.pw-plan-note{font-size:11px;color:var(--muted);margin-top:3px;}
+.pw-save{font-size:12px;color:var(--teal);margin-bottom:14px;font-family:'DM Mono',monospace;}
+.pw-close{font-size:13px;color:var(--muted);cursor:pointer;text-decoration:underline;margin-top:12px;display:block;}
+.pw-close:hover{color:var(--text);}
+
+/* ADMIN */
+.adm-login{display:none;position:fixed;inset:0;background:rgba(50,40,20,.7);backdrop-filter:blur(8px);z-index:500;align-items:center;justify-content:center;}
+.adm-login.show{display:flex;}
+.adm-login-card{background:#fff;border:2px solid rgba(192,57,43,.3);border-radius:16px;padding:40px 36px;width:340px;text-align:center;animation:fadeUp .3s ease;box-shadow:var(--shadow-lg);}
+.adm-login-ic{font-size:30px;margin-bottom:12px;}
+.adm-login-ttl{font-family:'Shippori Mincho',serif;font-size:19px;font-weight:700;margin-bottom:5px;color:var(--text);}
+.adm-login-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.adm-input{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;letter-spacing:.1em;outline:none;margin-bottom:10px;text-align:center;}
+.adm-input:focus{border-color:var(--red);}
+.adm-err{font-size:12px;color:var(--red);margin-bottom:10px;min-height:16px;font-family:'DM Mono',monospace;}
+.adm-cancel{font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;margin-top:10px;display:block;}
+.adm-bar{display:none;position:sticky;top:0;z-index:300;background:rgba(255,243,240,.97);border-bottom:2px solid rgba(192,57,43,.3);padding:0 24px;align-items:center;backdrop-filter:blur(8px);}
+.adm-bar.show{display:flex;}
+.adm-badge{background:var(--red);color:#fff;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;padding:3px 12px;border-radius:0 0 7px 7px;letter-spacing:.1em;text-transform:uppercase;margin-right:16px;align-self:flex-start;}
+.adm-tabs{display:flex;gap:0;flex:1;overflow-x:auto;}
+.adm-tab{padding:13px 15px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s;}
+.adm-tab:hover{color:var(--text);}
+.adm-tab.active{color:var(--red);border-bottom-color:var(--red);}
+.adm-bar-r{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.adm-ep-sel{background:#fff;border:2px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;cursor:pointer;}
+.adm-exit{font-family:'DM Mono',monospace;font-size:12px;color:var(--red);background:#fff;border:2px solid rgba(192,57,43,.3);border-radius:6px;padding:6px 14px;cursor:pointer;}
+.adm-exit:hover{background:rgba(192,57,43,.06);}
+.adm-drawer{display:none;position:fixed;right:0;top:48px;bottom:0;width:330px;background:#fff;border-left:2px solid rgba(192,57,43,.2);overflow-y:auto;padding:22px 18px;z-index:260;animation:slideIn .22s ease;box-shadow:-4px 0 20px rgba(0,0,0,.08);}
+.adm-drawer.show{display:block;}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.drw-ttl{font-family:'Shippori Mincho',serif;font-size:16px;font-weight:700;margin-bottom:3px;color:var(--text);}
+.drw-sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.adm-prog{background:var(--bg);border-radius:9px;padding:13px 15px;margin-bottom:18px;border:2px solid var(--border);}
+.adm-prog-lbl{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.adm-prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px;}
+.adm-prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:3px;transition:width .3s;}
+.adm-prog-pct{font-family:'DM Mono',monospace;font-size:12px;color:var(--teal);}
+.chk-grp-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--red);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;font-weight:700;}
+.chk-item{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border-radius:8px;margin-bottom:4px;background:var(--bg);border:2px solid var(--border);cursor:pointer;transition:all .15s;}
+.chk-item:hover{border-color:rgba(192,57,43,.3);}
+.chk-item.chk-on{background:rgba(26,110,58,.06);border-color:rgba(26,110,58,.3);}
+.chk-box{width:17px;height:17px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;}
+.chk-item.chk-on .chk-box{background:var(--green);border-color:var(--green);color:#fff;}
+.chk-txt{font-size:13px;line-height:1.5;color:var(--text);}
+.chk-note{font-size:11px;color:var(--muted);margin-top:2px;}
+.adm-note{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:13px;resize:vertical;min-height:76px;outline:none;}
+.adm-note:focus{border-color:rgba(192,57,43,.4);}
+.adm-save{width:100%;padding:9px;border-radius:8px;margin-top:8px;background:rgba(192,57,43,.08);border:2px solid rgba(192,57,43,.25);color:var(--red);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;font-weight:600;}
+.adm-save:hover{background:rgba(192,57,43,.14);}
+.ep-ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px;}
+.ep-ov-card{padding:9px 11px;border-radius:8px;background:var(--bg);border:2px solid var(--border);cursor:pointer;transition:all .15s;}
+.ep-ov-card:hover{border-color:rgba(192,57,43,.3);}
+.ep-ov-card.ok{border-color:rgba(26,110,58,.3);background:rgba(26,110,58,.05);}
+.ep-ov-card.ng{border-color:rgba(192,57,43,.3);background:rgba(192,57,43,.04);}
+.ep-ov-card.cur{border-color:var(--accent);background:rgba(200,134,10,.05);}
+.ov-n{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.ov-t{font-size:12px;line-height:1.35;color:var(--text);margin-top:2px;}
+.ov-s{font-size:10px;margin-top:3px;font-family:'DM Mono',monospace;}
+.s-ok{color:var(--green);} .s-ng{color:var(--red);}
+.s-cur{color:var(--accent);} .s-pend{color:var(--muted);}
+
+
+/* ── RxLogic 固有スタイル ── */
+.lv-intro{color:#22c55e;} .lv-basic{color:#3b82f6;}
+.lv-inter{color:#8b5cf6;} .lv-adv{color:#f59e0b;} .lv-exp{color:#ef4444;}
+.lv-rx{color:#e879f9;} .lv-case{color:#fb923c;}
+.tg-intro{color:#22c55e;border-color:rgba(34,197,94,.25);background:rgba(34,197,94,.06);}
+.tg-basic{color:#3b82f6;border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.06);}
+.tg-inter{color:#8b5cf6;border-color:rgba(139,92,246,.25);background:rgba(139,92,246,.06);}
+.tg-adv{color:#f59e0b;border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.06);}
+.tg-exp{color:#ef4444;border-color:rgba(239,68,68,.25);background:rgba(239,68,68,.06);}
+.tg-rx{color:#d946ef;border-color:rgba(217,70,239,.25);background:rgba(217,70,239,.06);}
+.tg-case{color:#fb923c;border-color:rgba(251,146,60,.25);background:rgba(251,146,60,.06);}
+
+/* diagram */
+.diag-wrap{margin:14px 0 20px;animation:fadeUp .5s ease;}
+.diag-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.diag-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.diag-wrap svg{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:#faf9f6;padding:8px;}
+
+/* ep-buy */
+.ep-buy-list{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
+.ep-buy-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:6px;background:var(--bg);border:1.5px solid var(--border);cursor:pointer;transition:border-color .15s;}
+.ep-buy-row:hover{border-color:rgba(200,134,10,.35);}
+.ep-buy-left{display:flex;align-items:center;gap:9px;}
+.ep-buy-n{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);width:24px;}
+.ep-buy-t{font-size:11px;color:var(--text);line-height:1.35;}
+.ep-buy-lv{font-size:9px;font-family:'DM Mono',monospace;}
+.ep-buy-price{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);flex-shrink:0;}
+.ep-buy-free{font-family:'DM Mono',monospace;font-size:11px;color:var(--green);flex-shrink:0;}
+
+/* scene-group */
+.scene-group{margin-bottom:28px;}
+.scene-group-lbl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:5px 0;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.scene-group-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* price-note */
+.price-note{font-size:12px;color:var(--muted);margin-top:14px;padding:11px 13px;background:rgba(200,134,10,.05);border-radius:6px;border:1.5px solid rgba(200,134,10,.15);line-height:1.7;}
+
+.hl{color:var(--accent);} .hl-t{color:var(--teal);} .hl-r{color:var(--red);}
+.hl-g{color:var(--green);} .hl-gold{color:var(--accent);} .hl-p{color:var(--purple);}
+
+  .ep-row { position: relative; }
+  .ep-row.done { border-left: 3px solid #16a34a; }
+  .ep-row.done .ep-title { color: #15803d; }
+  .ep-row.done::after {
+    content: '済';
+    position: absolute; top: 10px; right: 12px;
+    background: #16a34a; color: #fff;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px;
+  }
+
+  .fb-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    z-index: 9999; display: none; align-items: center;
+    justify-content: center; padding: 20px;
+  }
+  .fb-modal-overlay.open { display: flex; }
+  .fb-modal-box {
+    background: #fff; border-radius: 16px; padding: 32px;
+    max-width: 400px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .fb-modal-box h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; color: #1a1a1a; }
+  .fb-modal-box p { font-size: 13px; color: #666; margin-bottom: 20px; }
+  .fb-input {
+    width: 100%; padding: 12px 14px; border: 1.5px solid #e5e7eb;
+    border-radius: 10px; font-size: 14px; margin-bottom: 10px;
+    box-sizing: border-box; outline: none;
+  }
+  .fb-input:focus { border-color: var(--accent, #c8860a); }
+  .fb-btn-primary {
+    width: 100%; padding: 13px; background: var(--accent, #c8860a); color: #fff;
+    border: none; border-radius: 10px; font-size: 15px;
+    font-weight: 700; cursor: pointer; margin-top: 6px;
+  }
+  .fb-btn-secondary {
+    width: 100%; padding: 11px; background: none; color: #666;
+    border: 1.5px solid #e5e7eb; border-radius: 10px;
+    font-size: 13px; cursor: pointer; margin-top: 8px;
+  }
+  .fb-error { color: #dc2626; font-size: 12px; margin: 6px 0; min-height: 16px; }
+  .fb-tab {
+    display: inline-block; padding: 6px 16px; border-radius: 20px;
+    font-size: 13px; cursor: pointer; margin-bottom: 20px;
+  }
+  .fb-tab.active { background: var(--accent, #c8860a); color: #fff; }
+  .fb-tab:not(.active) { background: #f5f5f5; color: #666; }
+  .fb-user-bar {
+    display: none; align-items: center; gap: 8px; font-size: 12px; color: var(--muted, #888);
+  }
+  .fb-logged-in .fb-user-bar { display: flex; }
+  .fb-logged-in .fb-login-btn { display: none !important; }
+
+  </style>
+<style>
+.internal-bar{background:var(--border);color:var(--muted);padding:8px 32px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;display:flex;align-items:center;gap:12px;}
+.internal-badge{background:var(--text);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:4px;letter-spacing:.08em;}
+</style>
+<style>
+.msg-react{padding:14px 18px;border-radius:10px;font-size:14px;line-height:1.85;margin:8px 0 4px;max-width:660px;animation:fadeUp .25s ease;}
+.msg-react-ok{background:rgba(26,110,58,.08);border:2px solid rgba(26,110,58,.25);color:#1a1a1a;}
+.msg-react-ng{background:rgba(185,28,28,.06);border:2px solid rgba(185,28,28,.2);color:#1a1a1a;}
+.wrong-flash{outline:3px solid #ef4444;outline-offset:2px;}
+</style>
+<style>
+.p-body{display:grid;grid-template-columns:260px 1fr;flex:1;min-height:0;}
+.p-sidebar{background:#fff;border-right:2px solid var(--border);border-left:none;padding:20px 16px;overflow-y:auto;position:sticky;top:57px;height:calc(100vh - 57px);}
+.p-content{padding:32px 40px 100px;overflow-y:auto;max-width:none;}
+@media(min-width:769px){
+  .msg-narrator,.msg-question,.msg-agree,.choices,.msg-reveal,.msg-script,.msg-warn,.msg-table,.review-banner,.voice-card,.msg-end,.msg-react{max-width:660px;}
+  .msg-diag,.diag-wrap{max-width:100%;width:100%;}
+  .diag-wrap svg{width:100%;max-height:320px;height:auto;}
+  .diag-wrap{margin:18px 0 24px;padding:12px;}
+}
+.mob-ep-sel-wrap{display:none;}
+.mob-ep-sel{width:100%;background:#fff;border:2px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Noto Sans JP',sans-serif;font-size:14px;outline:none;cursor:pointer;}
+@media(max-width:768px){
+  .p-body{grid-template-columns:1fr!important;}
+  .p-sidebar{display:none!important;}
+  .p-hdr{padding:10px 16px;flex-wrap:wrap;gap:6px;}
+  .p-prog{display:none;}
+  .mob-ep-sel-wrap{display:block!important;padding:8px 16px 0;background:rgba(247,245,240,.97);border-bottom:1px solid var(--border);}
+  .p-content{padding:20px 18px 80px!important;}
+  .ep-tags{display:none;}
+  .l-footer{padding:20px;flex-direction:column;gap:8px;text-align:center;}
+}
+</style>
+<style>
+.review-banner{background:linear-gradient(135deg,rgba(14,122,110,.1),rgba(26,110,58,.08));border:2px solid rgba(14,122,110,.3);border-radius:14px;padding:20px 24px;margin-bottom:22px;animation:fadeUp .4s ease;}
+.review-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.review-ttl{font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.review-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+.fill-q{margin-bottom:14px;padding:14px 16px;background:#fff;border:2px solid var(--border);border-radius:10px;}
+.fill-q-lbl{font-size:13px;color:var(--muted);margin-bottom:8px;}
+.fill-q-txt{font-size:15px;color:var(--text);line-height:2;}
+.fill-input{border:none;border-bottom:2.5px solid var(--accent);outline:none;min-width:120px;padding:2px 8px;font-family:'Noto Sans JP',sans-serif;font-size:14px;color:var(--text);background:transparent;text-align:center;vertical-align:bottom;}
+.fill-input:focus{border-color:var(--teal);}
+.fill-input.ok{border-color:var(--green);color:var(--green);background:rgba(26,110,58,.05);}
+.fill-input.ng{border-color:var(--red);color:var(--red);}
+.fill-check{padding:11px 24px;border-radius:8px;background:var(--teal);color:#fff;border:none;font-family:'Noto Sans JP',sans-serif;font-size:14px;cursor:pointer;margin-top:12px;transition:all .15s;}
+.fill-check:hover{background:#0a6860;}
+.fill-result{margin-top:14px;padding:14px 16px;border-radius:10px;display:none;font-size:14px;line-height:1.9;}
+.fill-result.show{display:block;}
+.fill-result.all-ok{background:rgba(26,110,58,.06);border:2px solid rgba(26,110,58,.2);color:var(--green);}
+.fill-result.partial{background:rgba(200,134,10,.06);border:2px solid rgba(200,134,10,.2);color:var(--text);}
+</style>
+<style>
+.p-body{display:grid;grid-template-columns:260px 1fr;flex:1;min-height:0;}
+.p-sidebar{background:#fff;border-right:2px solid var(--border);padding:20px 16px;overflow-y:auto;position:sticky;top:57px;height:calc(100vh - 57px);}
+.p-content{padding:32px 40px 100px;overflow-y:auto;max-width:none;}
+.mob-ep-sel-wrap{display:none;}
+.mob-ep-sel{width:100%;background:#fff;border:2px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Noto Sans JP',sans-serif;font-size:14px;outline:none;cursor:pointer;}
+.msg-react{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.75;margin:6px 0 10px;max-width:660px;animation:fadeUp .2s ease;}
+.msg-react-ok{background:rgba(22,101,52,.07);border-left:4px solid #16a34a;color:#1a1a1a;}
+.msg-react-ng{background:rgba(153,27,27,.06);border-left:4px solid #dc2626;color:#1a1a1a;}
+.msg-react-icon{font-size:22px;flex-shrink:0;margin-top:0px;}
+.msg-react-body{flex:1;}
+.msg-react-label{font-size:20px;font-weight:900;display:block;margin-bottom:6px;letter-spacing:.02em;line-height:1;}
+.msg-react-ok .msg-react-label{color:#16a34a;}
+.msg-react-ng .msg-react-label{color:#dc2626;}
+.choice-btn.correct{border-color:#16a34a!important;background:rgba(22,101,52,.07)!important;color:#15803d!important;}
+.choice-btn.wrong-flash{outline:3px solid #dc2626;outline-offset:2px;background:rgba(153,27,27,.06)!important;}
+.review-banner{background:linear-gradient(135deg,rgba(14,122,110,.1),rgba(26,110,58,.08));border:2px solid rgba(14,122,110,.3);border-radius:14px;padding:20px 24px;margin-bottom:22px;animation:fadeUp .4s ease;}
+.review-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.review-ttl{font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.review-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+.fill-q{margin-bottom:14px;padding:14px 16px;background:#fff;border:2px solid var(--border);border-radius:10px;}
+.fill-q-lbl{font-size:13px;color:var(--muted);margin-bottom:8px;}
+.fill-q-txt{font-size:15px;color:var(--text);line-height:2;}
+.fill-input{border:none;border-bottom:2.5px solid var(--accent);outline:none;min-width:120px;padding:2px 8px;font-family:'Noto Sans JP',sans-serif;font-size:14px;color:var(--text);background:transparent;text-align:center;vertical-align:bottom;}
+.fill-input:focus{border-color:var(--teal);}
+.fill-input.ok{border-color:var(--green);color:var(--green);background:rgba(26,110,58,.05);}
+.fill-input.ng{border-color:var(--red);color:var(--red);}
+.fill-check{padding:11px 24px;border-radius:8px;background:var(--teal);color:#fff;border:none;font-family:'Noto Sans JP',sans-serif;font-size:14px;cursor:pointer;margin-top:12px;}
+.fill-result{margin-top:14px;padding:14px 16px;border-radius:10px;display:none;font-size:14px;line-height:1.9;}
+.fill-result.show{display:block;}
+.fill-result.all-ok{background:rgba(26,110,58,.06);border:2px solid rgba(26,110,58,.2);color:var(--green);}
+.fill-result.partial{background:rgba(200,134,10,.06);border:2px solid rgba(200,134,10,.2);color:var(--text);}
+@media(min-width:769px){
+  .msg-narrator,.msg-question,.msg-agree,.choices,.msg-reveal,.msg-script,.msg-warn,.msg-table,.review-banner,.msg-end,.msg-react{max-width:660px;}
+  .msg-diag,.diag-wrap{max-width:100%;width:100%;}
+  .diag-wrap svg{width:100%;max-height:320px;height:auto;}
+  .diag-wrap{margin:18px 0 24px;padding:12px;background:#fff;border-radius:10px;border:1.5px solid #e5e7eb;}
+}
+@media(max-width:768px){
+  .p-body{grid-template-columns:1fr!important;}
+  .p-sidebar{display:none!important;}
+  .p-hdr{padding:10px 16px;flex-wrap:wrap;gap:6px;}
+  .p-prog{display:none;}
+  .mob-ep-sel-wrap{display:block!important;padding:8px 16px 0;background:rgba(247,245,240,.97);border-bottom:1px solid var(--border);}
+  .p-content{padding:20px 18px 80px!important;}
+  .ep-tags{display:none;}
+  .l-footer{padding:20px;flex-direction:column;gap:8px;text-align:center;}
+}
+@media(max-width:480px){
+  .hero h1{font-size:22px;}
+  .ep-row{grid-template-columns:32px 1fr;}
+  .ep-meta{display:none;}
+}
+</style>
+<style>
+.ep-new-badge{display:inline-block;font-size:9px;font-family:'DM Mono',monospace;font-weight:700;
+  letter-spacing:.06em;padding:2px 7px;border-radius:6px;margin-left:7px;vertical-align:middle;
+  background:linear-gradient(135deg,#dc2626,#f59e0b);color:#fff;animation:newPulse 2s infinite;}
+@keyframes newPulse{0%,100%{opacity:1}50%{opacity:.7}}
+.sb-item.is-new .ep-row-title::after{content:'NEW';font-size:9px;font-family:'DM Mono',monospace;
+  font-weight:700;padding:1px 5px;border-radius:4px;margin-left:6px;
+  background:linear-gradient(135deg,#dc2626,#f59e0b);color:#fff;}
+</style>
+<style>
+.diag-zoom-wrap{position:relative;cursor:zoom-in;}
+.diag-zoom-wrap::after{content:'🔍 拡大';position:absolute;top:8px;right:8px;
+  background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:3px 10px;
+  border-radius:6px;pointer-events:none;font-family:sans-serif;}
+.diag-zoom-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;}
+.diag-zoom-box{background:#fff;border-radius:12px;padding:16px;
+  width:100%;max-width:800px;max-height:90vh;overflow-y:auto;}
+.diag-zoom-close{display:block;margin:0 0 12px auto;background:#222;color:#fff;
+  border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;}
+</style>
+
+
+</head>
+<body>
+
+
+<div class="internal-bar">薬剤師向け学習サイト</div>
+
+<!-- ═══════════ LANDING ═══════════ -->
+<div id="landing" class="screen active">
+  <nav class="nav">
+    <div class="logo">Rx<span>Logic</span></div>
+    <div class="nav-r">
+      <span class="btn btn-outline" onclick="document.getElementById('epSec').scrollIntoView({behavior:'smooth'})">カリキュラム</span>
+      <button class="btn btn-gold" onclick="openEp(0)">▶ EP01 から始める</button>
+      
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="kicker">精神科薬剤師専門 · 対話型臨床講座</div>
+    <h1>処方箋の向こうに、<br><em>患者がいる。</em></h1>
+    <p class="hero-sub">受容体プロファイルで処方意図を読み、「なぜこの薬か」を言葉にできる薬剤師へ。精神科処方箋に特化した対話型学習、全<span id="epCountStat">38</span>話。</p>
+    <div class="hero-btns">
+      <button class="btn btn-gold" onclick="openEp(0)">▶ EP01 から始める</button>
+      <button class="btn btn-outline" id="resumeBtn" style="display:none;" onclick="" title="前回の続きから再開">↩ 続きから始める</button>
+      </div>
+    <p class="hero-note">全話公開</p>
+  </section>
+
+  <div class="stats">
+    <div><div class="stat-num" id="rxEpStat">38</div><div class="stat-lbl">Episodes</div></div>
+    <div><div class="stat-num">図解付き</div><div class="stat-lbl">Visual Learning</div></div>
+    <div><div class="stat-num">対話型</div><div class="stat-lbl">Learning Style</div></div>
+  </div>
+
+  <section class="ep-sec" id="epSec">
+    <div class="sec-lbl">Curriculum</div>
+    <div class="ep-list" id="epList"></div>
+  </section>
+
+  <footer class="l-footer">
+    <div>© 2026 薬剤師向け学習サイト · 精神科薬剤師のための対話型臨床講座</div>
+    <div style="display:flex;gap:20px"><span>特定商取引法</span><span>プライバシー</span><span>お問い合わせ</span></div>
+  </footer>
+</div>
+
+<!-- ═══════════ PLAYER ═══════════ -->
+<div id="player" class="screen">
+  <div class="p-hdr">
+    <div class="p-back" onclick="goLanding()">← 一覧へ</div>
+    <div class="p-ep-info">
+      <div class="p-ep-n" id="pEpN">EP 01</div>
+      <div class="p-ep-t" id="pEpT">—</div>
+    </div>
+    <div class="p-prog">
+      <div class="p-prog-bar"><div class="p-prog-fill" id="progFill" style="width:0%"></div></div>
+      <div class="p-prog-txt" id="progTxt">1/39</div>
+    </div>
+  </div>
+  <div class="mob-ep-sel-wrap" id="mobEpSelWrap">
+    <select class="mob-ep-sel" id="mobEpSel" onchange="openEp(parseInt(this.value))"></select>
+  </div>
+  <div class="p-body">
+    <div class="p-sidebar">
+      <div class="sb-ttl">エピソード一覧</div>
+      <div class="sb-list" id="sbList"></div>
+    </div>
+    <div class="p-content" id="pContent"></div>
+  </div>
+</div>
+
+<!-- ═══════════ PAYWALL ═══════════ -->
+<div class="pw-overlay" id="pwOverlay" style="display:none"></div>
+
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const EPS = [
+  {n:1,free:true,isNew:false,lv:'intro',lbl:'入門',title:'睡眠の仕組みと薬の作用点',
+   desc:'睡眠スイッチはなぜ切れるのか。BZD・オレキシン・ラメルテオン。3系統を整理する入口。',fn:'fnSleepMechanism',mins:6,tags:['睡眠機序','BZD','オレキシン','ラメルテオン']},
+];
+const TC = {intro:'tg-intro',basic:'tg-basic',inter:'tg-inter',adv:'tg-adv',exp:'tg-exp',rx:'tg-rx',case:'tg-case'};
+const LC = {intro:'lv-intro',basic:'lv-basic',inter:'lv-inter',adv:'lv-adv',exp:'lv-exp',rx:'lv-rx',case:'lv-case'};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let curEp = 0;
+let subscribed = true;
+let purchased = new Set();
+let pwEp = -1;
+let pwPlan = 'monthly';
+let stepIdx = 0;
+let steps = [];
+
+function unlocked(i) { return true; }
+
+// ═══════════════════════════════════════════
+// RENDER LANDING
+// ═══════════════════════════════════════════
+function renderLanding() {
+  var list = document.getElementById('epList');
+  list.innerHTML = '';
+  for (var i = 0; i < EPS.length; i++) {
+    var ep = EPS[i];
+    var row = document.createElement('div');
+    row.className = 'ep-row free';
+    (function(idx) {
+      row.onclick = function() { openEp(idx); };
+    })(i);
+    var tags = '';
+    for (var t = 0; t < ep.tags.length; t++) {
+      tags += '<span class="ep-tag ' + TC[ep.lv] + '">' + ep.tags[t] + '</span>';
+    }
+    row.innerHTML =
+      '<div class="ep-n">' + String(ep.n).padStart(2,'0') + '</div>' +
+      '<div class="ep-info">' +
+        '<div class="ep-lv ' + LC[ep.lv] + '">' + ep.lbl + '</div>' +
+        '<div class="ep-ttl">' + ep.title + '</div>' +
+        '<div class="ep-dsc">' + ep.desc + '</div>' +
+        '<div class="ep-tags">' + tags + '</div>' +
+      '</div>' +
+      '<div class="ep-meta">' +
+        '<div class="ep-min">' + ep.mins + ' min</div>' +
+        '<div class="play-ic">▶</div>' +
+      '</div>';
+    list.appendChild(row);
+  }
+
+  
+  renderResumeBtn();
+
+  if (typeof applyDoneEps === 'function') applyDoneEps();}
+
+function renderSidebar(ai) {
+  var list = document.getElementById('sbList');
+  list.innerHTML = '';
+  for (var i = 0; i < EPS.length; i++) {
+    var ep = EPS[i];
+    var div = document.createElement('div');
+    div.className = 'sb-ep' + (i === ai ? ' cur' : '');
+    (function(idx) {
+      div.onclick = function() { openEp(idx); };
+    })(i);
+    div.innerHTML =
+      '<div class="sb-n">' + String(ep.n).padStart(2,'0') + '</div>' +
+      '<div>' +
+        '<div class="sb-t">' + ep.title + '</div>' +
+        '<div class="sb-lv ' + LC[ep.lv] + '">' + ep.lbl + '</div>' +
+      '</div>';
+    list.appendChild(div);
+  }
+  var sel = document.getElementById('mobEpSel');
+  if (sel) {
+    sel.innerHTML = '';
+    for (var k = 0; k < EPS.length; k++) {
+      var opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = 'EP' + String(EPS[k].n).padStart(2,'0') + ' ' + EPS[k].title;
+      if (k === ai) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+}
+
+function openEp(i) {
+  curEp = i;
+  stepIdx = 0;
+  steps = getSteps(i);
+  var ep = EPS[i];
+  document.getElementById('pEpN').textContent = 'EP ' + String(ep.n).padStart(2,'0');
+  document.getElementById('pEpT').textContent = ep.title;
+  document.getElementById('progTxt').textContent = ep.n + '/' + EPS.length;
+  document.getElementById('progFill').style.width = (ep.n / EPS.length * 100) + '%';
+  document.getElementById('pContent').innerHTML = '';
+  renderSidebar(i);
+  document.getElementById('landing').classList.remove('active');
+  document.getElementById('player').classList.add('active');
+  playSteps();
+}
+
+function goLanding() {
+  document.getElementById('player').classList.remove('active');
+  document.getElementById('landing').classList.add('active');
+  renderResumeBtn();
+}
+
+// ═══════════════════════════════════════════
+// STEP PLAYER
+// ═══════════════════════════════════════════
+function playSteps() {
+  if (stepIdx >= steps.length) return;
+  var step = steps[stepIdx];
+  if (step.type === 'narrator') { addNarrator(step.text); stepIdx++; saveProgress(); setTimeout(playSteps, 120); }
+  else if (step.type === 'question') { addQuestion(step.text); stepIdx++; saveProgress(); setTimeout(playSteps, 120); }
+  else if (step.type === 'agree') { addAgree(step.options, step.next); }
+  else if (step.type === 'choice') { addChoice(step.options, step.correct, step.explain); }
+  else if (step.type === 'reveal') { addReveal(step.label, step.text); stepIdx++; saveProgress(); setTimeout(playSteps, 120); }
+  else if (step.type === 'diagram') { addDiagram(step.svgFn); stepIdx++; saveProgress(); setTimeout(playSteps, 120); }
+  else if (step.type === 'table') { addTable(step.headers, step.rows); stepIdx++; saveProgress(); setTimeout(playSteps, 120); }
+  else if (step.type === 'script') { addScript(step.label, step.text); stepIdx++; saveProgress(); setTimeout(playSteps, 120); }
+  else if (step.type === 'warn') { addWarn(step.text); stepIdx++; saveProgress(); setTimeout(playSteps, 120); }
+  else if (step.type === 'fillreview') { renderFillReview(step); advanceStep(); return; }
+  else if (step.type === 'quiz_unit') { addQuizUnit(step.questions); }
+  if (step.type === 'end') { addEnd(); }
+}
+
+function addEl(el) {
+  var c = document.getElementById('pContent');
+  c.appendChild(el);
+  var pc = document.getElementById('pContent'); if(pc) setTimeout(function(){ pc.scrollTop = pc.scrollHeight; }, 120);
+}
+
+function addNarrator(text) {
+  var el = document.createElement('div');
+  el.className = 'msg-narrator';
+  el.innerHTML = text.replace(/\n/g, '<br>');
+  addEl(el);
+}
+function addQuestion(text) {
+  var el = document.createElement('div');
+  el.className = 'msg-q';
+  el.innerHTML = '<div class="msg-q-lbl">あなたに質問です</div><div class="msg-q-txt">' + text + '</div>';
+  addEl(el);
+}
+function addAgree(options, nextId) {
+  var wrap = document.createElement('div');
+  wrap.className = 'agree-wrap';
+  for (var i = 0; i < options.length; i++) {
+    (function(opt) {
+      var btn = document.createElement('button');
+      btn.className = 'agree-btn';
+      btn.textContent = opt;
+      btn.onclick = function() {
+        wrap.querySelectorAll('.agree-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        markEpDone(curEp);
+        stepIdx++; saveProgress();
+        if (nextId) {
+          for (var j = 0; j < steps.length; j++) {
+            if (steps[j].id === nextId) { stepIdx = j; break; }
+          }
+        }
+        setTimeout(playSteps, 280);
+      };
+      wrap.appendChild(btn);
+    })(options[i]);
+  }
+  addEl(wrap);
+}
+function addChoice(options, correct, explain) {
+  var wrap = document.createElement('div');
+  wrap.className = 'choices';
+  var attempts = 0;
+  for (var i = 0; i < options.length; i++) {
+    (function(opt, idx) {
+      var btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.innerHTML = '<span style="font-size:15px;flex-shrink:0">' + opt.icon + '</span><span>' + opt.text + '</span>';
+      btn.onclick = function() {
+        // Remove previous reaction
+        var prev = wrap.nextSibling;
+        while (prev && prev.className && prev.className.indexOf('msg-react') >= 0) {
+          var nxt = prev.nextSibling;
+          if (prev.parentNode) prev.parentNode.removeChild(prev);
+          prev = nxt;
+        }
+        if (idx === correct) {
+          // Correct
+          wrap.querySelectorAll('.choice-btn').forEach(function(b) { b.disabled = true; });
+          btn.classList.add('correct');
+          var react = document.createElement('div');
+          react.className = 'msg-react msg-react-ok';
+          react.innerHTML = (attempts === 0 ? '✅ 正解です！<br>' : '✅ その通りです！<br>') + explain;
+          wrap.after(react);
+          var pc = document.getElementById('pContent');
+          if (pc) setTimeout(function(){ pc.scrollTop = pc.scrollHeight; }, 60);
+          stepIdx++;
+          setTimeout(playSteps, 600);
+        } else {
+          // Wrong - specific hint per choice
+          attempts++;
+          btn.classList.add('wrong-flash');
+          setTimeout(function(){ btn.classList.remove('wrong-flash'); }, 700);
+          var hint = opt.hint || 'もう少し考えてみてください。';
+          var react = document.createElement('div');
+          react.className = 'msg-react msg-react-ng';
+          react.innerHTML = '❌ ' + hint + '<div style="font-size:12px;color:var(--muted);margin-top:6px;">→ もう一度選んでみましょう</div>';
+          wrap.after(react);
+          var pc2 = document.getElementById('pContent');
+          if (pc2) setTimeout(function(){ pc2.scrollTop = pc2.scrollHeight; }, 60);
+        }
+      };
+      wrap.appendChild(btn);
+    })(options[i], i);
+  }
+  addEl(wrap);
+}
+function addReveal(label, text) {
+  var el = document.createElement('div');
+  el.className = 'reveal-card';
+  el.innerHTML = '<div class="reveal-lbl">' + label + '</div><div class="reveal-txt">' + text.replace(/\n/g,'<br>') + '</div>';
+  addEl(el);
+}
+function addDiagram(svgFn) {
+  var wrap = document.createElement('div');
+  wrap.className = 'diag-wrap';
+  wrap.innerHTML = svgFn();
+  addEl(wrap);
+}
+function addTable(headers, rows) {
+  var t = document.createElement('table');
+  t.className = 'cmp-tbl';
+  var th = '<tr>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
+  var tb = rows.map(function(r) {
+    return '<tr>' + r.map(function(c) { return '<td>' + c + '</td>'; }).join('') + '</tr>';
+  }).join('');
+  t.innerHTML = '<thead>' + th + '</thead><tbody>' + tb + '</tbody>';
+  addEl(t);
+}
+function addScript(label, text) {
+  var el = document.createElement('div');
+  el.className = 'script-card';
+  el.innerHTML = '<b>' + label + '</b>' + text;
+  addEl(el);
+}
+function addWarn(text) {
+  var el = document.createElement('div');
+  el.className = 'warn-card';
+  el.innerHTML = '<b>⚠ 注意</b>' + text;
+  addEl(el);
+}
+function addEnd() {
+  clearProgress();
+  var ep = EPS[curEp];
+  var nx = EPS[curEp + 1];
+  var el = document.createElement('div');
+  el.className = 'ep-end';
+
+  var icon = document.createElement('div');
+  icon.style.cssText = 'font-size:26px;margin-bottom:9px';
+  icon.textContent = '🎓';
+  el.appendChild(icon);
+
+  var ttl = document.createElement('div');
+  ttl.className = 'ep-end-ttl';
+  ttl.textContent = 'EP' + ep.n + ' 完了！';
+  el.appendChild(ttl);
+
+  var sub = document.createElement('div');
+  sub.className = 'ep-end-sub';
+  sub.textContent = ep.title + 'を対話・図解で確認しました。';
+  el.appendChild(sub);
+
+  var btns = document.createElement('div');
+  btns.className = 'ep-end-btns';
+
+  if (nx) {
+    var nxBtn = document.createElement('button');
+    nxBtn.className = 'btn btn-gold';
+    nxBtn.textContent = '次のEP → ' + nx.title.substring(0, 14) + '…';
+    (function(idx){ nxBtn.onclick = function(){ openEp(idx); }; })(curEp + 1);
+    btns.appendChild(nxBtn);
+  }
+
+  el.appendChild(btns);
+  addEl(el);
+}
+
+// ═══════════════════════════════════════════
+// SVG DIAGRAMS (plain functions, no template literals with HTML comments)
+// ═══════════════════════════════════════════
+function svgSleepSwitch() {
+  return '<div class="diag-lbl">睡眠スイッチ ― 覚醒と睡眠のシーソー</div>' +
+  '<svg viewBox="0 0 580 240" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">' +
+  '<rect x="8" y="8" width="564" height="224" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>' +
+  '<rect x="24" y="28" width="240" height="180" rx="8" fill="#1d4ed8"/>' +
+  '<text x="144" y="58" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">覚醒システム</text>' +
+  '<text x="144" y="80" text-anchor="middle" fill="#bfdbfe" font-size="12">オレキシン（外側視床下部）</text>' +
+  '<text x="144" y="108" text-anchor="middle" fill="#fff" font-size="12">↑ 刺激する</text>' +
+  '<text x="144" y="130" text-anchor="middle" fill="#bfdbfe" font-size="11">・ノルアドレナリン</text>' +
+  '<text x="144" y="148" text-anchor="middle" fill="#bfdbfe" font-size="11">・ドパミン</text>' +
+  '<text x="144" y="166" text-anchor="middle" fill="#bfdbfe" font-size="11">・ヒスタミン</text>' +
+  '<text x="144" y="192" text-anchor="middle" fill="#93c5fd" font-size="11">← オレキシン拮抗薬がOFF</text>' +
+  '<rect x="316" y="28" width="240" height="180" rx="8" fill="#0f766e"/>' +
+  '<text x="436" y="58" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">睡眠システム</text>' +
+  '<text x="436" y="80" text-anchor="middle" fill="#99f6e4" font-size="12">GABA神経（前脳基底部）</text>' +
+  '<text x="436" y="108" text-anchor="middle" fill="#fff" font-size="12">↓ 抑制する</text>' +
+  '<text x="436" y="130" text-anchor="middle" fill="#99f6e4" font-size="11">・メラトニン受容体</text>' +
+  '<text x="436" y="148" text-anchor="middle" fill="#99f6e4" font-size="11">・プロスタグランジンD2</text>' +
+  '<text x="436" y="166" text-anchor="middle" fill="#99f6e4" font-size="11">← ラメルテオンが補助</text>' +
+  '<text x="290" y="130" text-anchor="middle" fill="#374151" font-size="13" font-weight="bold">⇄</text>' +
+  '<text x="290" y="148" text-anchor="middle" fill="#6b7280" font-size="10">バランス</text>' +
+  '</svg>';
+}
+// ═══════════════════════════════════════════
+// EPISODE STEPS
+// ═══════════════════════════════════════════
+function getSteps(i) {
+  var ep = EPS[i];
+  if (!ep || !ep.fn) return epPlaceholder(i);
+  var fnName = ep.fn;
+  var fns = {
+    fnSleepMechanism: typeof fnSleepMechanism!=='undefined'?fnSleepMechanism:null,
+  };
+  var fn = fns[fnName];
+  return fn ? fn() : epPlaceholder(i);
+}
+function fnSleepMechanism() {
+  return [
+    {type:'narrator', text:'まず、こんな経験はありませんか？'},
+    {type:'question', text:'BZD系の睡眠薬を飲んだ患者さんが「よく眠れたけど朝がつらい」と言ってきた——そういう場面、あなたにもありますか？'},
+    {type:'agree', options:['よくある','たまにある','あまりない'], next:'e1a1'},
+    {type:'narrator', id:'e1a1', text:'その「朝がつらい」の正体を一緒に考えてみましょう。\n\nまず根本的な問いから——脳が眠りに入るとき、何が起きているでしょうか？'},
+    {type:'choice', options:[
+      {icon:'⚡', text:'脳全体の神経活動が落ちる',hint:'BZD系のような広域鎮静薬ならそう言えますが、オレキシン拮抗薬の作用はもっと選択的です。'},
+      {icon:'🔛', text:'覚醒を維持するシステムがオフになる'},
+      {icon:'💊', text:'薬が直接神経を眠らせる',hint:'「直接眠らせる」イメージは強制的な鎮静に近く、オレキシン拮抗薬の作用とは異なります。もう一段上流の話です。'},
+    ], correct:1, explain:'「覚醒を維持するシステムがオフになる」が自然な眠りに最も近いイメージです。脳は眠りに「落とされる」のではなく、覚醒の維持をやめることで眠る設計になっています。'},
+    {type:'narrator', text:'では、その「覚醒を維持するシステム」の主役は何でしょうか。図で確認してみましょう。'},
+    {type:'diagram', svgFn: svgSleepSwitch},
+    {type:'reveal', label:'図の読み方', text:'左（青）が<b style="color:var(--accent)">覚醒システム</b>、右（緑）が<b style="color:var(--teal)">睡眠システム</b>。オレキシンが覚醒の総司令官として、NE・DA・ヒスタミンを活性化しています。2つのシステムが常に綱引きをしているのが睡眠・覚醒のメカニズムです。'},
+    {type:'question', text:'オレキシン拮抗薬はこの図のどこに作用していると思いますか？'},
+    {type:'agree', options:['覚醒システムの入口','睡眠システムの強化','両方に同時に'], next:'e1a2'},
+    {type:'narrator', id:'e1a2', text:'そうです。覚醒システムの入口——オレキシンをブロックすることで、覚醒を自然に切る設計です。\n\n一方BZDは睡眠システムのGABAを増強するアプローチ。この違いが「朝のつらさ」の根拠になります。'},
+    {type:'question', text:'BZDが「脳全体を広く抑制する」ことで、睡眠の質にどう影響すると思いますか？'},
+    {type:'choice', options:[
+      {icon:'😴', text:'深い眠りが増えて質が上がる',hint:'BZD系は逆に深睡眠を抑制します。「よく眠れる感覚」と「睡眠の質向上」は別の話です。'},
+      {icon:'🌀', text:'REM睡眠・深睡眠が抑制されて質が下がる',hint:'これが正解です。BZDは深睡眠（徐波睡眠）とREM睡眠を抑制します。'},
+      {icon:'➡️', text:'睡眠の質には影響しない',hint:'BZDは確実に睡眠構築に影響します。「よく眠れた感覚」と「睡眠の質向上」は別物です。'},
+    ], correct:1, explain:'BZDはREM睡眠と深睡眠（SWS）の両方を抑制します。「眠れた」のに「疲れが取れない」という訴えは、この睡眠構造の歪みを反映しています。'},
+    {type:'reveal', label:'今日のまとめ', text:'① BZD：脳全体を広く抑制 → 依存・耐性・睡眠構造の歪み\n② オレキシン拮抗薬：覚醒スイッチのみをオフ → 自然な眠りに近い\n③ ラメルテオン：体内時計を整える → 概日リズム改善\n\n<b style="color:var(--accent)">「どうやって眠らせるか」</b>という視点が次回以降の使い分けの根拠になります。'},
+    {type:'question', text:'この「作用点の違い」という視点は、日常業務に役立ちそうですか？'},
+    {type:'agree', options:['役立ちそう！','もう少し詳しく知りたい','まだよくわからない'], next:'e1end'},
+    {type:'end', id:'e1end'},
+  ];
+}
+
+function epPlaceholder(n) {
+  var ep = EPS[n];
+  return [
+    {type:'narrator', text:'EP' + ep.n + '「' + ep.title + '」のプレビューです。'},
+    {type:'question', text:'「' + ep.title + '」——この分野で、現場での感覚と薬理学的な根拠のギャップを感じたことはありますか？'},
+    {type:'agree', options:['ある！','特にない','考えたことがなかった'], next:'ph_a'},
+    {type:'narrator', id:'ph_a', text:'タグ：' + ep.tags.join('・') + '\n所要時間：約' + ep.mins + '分\n\nこのエピソードは準備中です。'},
+    {type:'end'},
+  ];
+}
+
+// ═══════════════════════════════════════════
+// PAYWALL
+// ═══════════════════════════════════════════
+
+
+function selPlan(plan) {
+  pwPlan = plan;
+  document.getElementById('planMonthly').classList.toggle('sel', plan === 'monthly');
+  document.getElementById('planSingle').classList.toggle('sel', plan === 'single');
+}
+function doSubscribe() {
+  if (pwPlan === 'monthly') { subscribed = true; }
+  else { if (pwEp >= 0) purchased.add(pwEp); }
+  closePW();
+  renderLanding();
+  if (document.getElementById('player').classList.contains('active')) {
+    openEp(pwEp >= 0 ? pwEp : curEp);
+  }
+}
+
+function renderDiagram(step) {
+  var div = document.createElement('div');
+  div.className = 'diag-wrap msg-diag';
+  div.innerHTML = step.svgFn();
+  document.getElementById('pContent').appendChild(div);
+  var pc = document.getElementById('pContent');
+  if(pc) setTimeout(function(){ pc.scrollTop = pc.scrollHeight; }, 120);
+  advanceStep();
+}
+function saveProgress() {
+  try {
+    localStorage.setItem('rxlogic_ep', curEp);
+    localStorage.setItem('rxlogic_step', stepIdx);
+  } catch(e) {}
+}
+function clearProgress() {
+  try {
+    localStorage.removeItem('rxlogic_ep');
+    localStorage.removeItem('rxlogic_step');
+  } catch(e) {}
+}
+function getSavedProgress() {
+  try {
+    var ep = localStorage.getItem('rxlogic_ep');
+    var step = localStorage.getItem('rxlogic_step');
+    if(ep !== null && step !== null) return {ep: parseInt(ep), step: parseInt(step)};
+  } catch(e) {}
+  return null;
+}
+
+function renderResumeBtn() {
+  var saved = getSavedProgress();
+  var btn = document.getElementById('resumeBtn');
+  if(!btn) return;
+  if(!saved || !EPS[saved.ep]) {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'inline-flex';
+  btn.onclick = function() {
+    var sv = getSavedProgress();
+    if(!sv) return;
+    curEp = sv.ep;
+    stepIdx = sv.step;
+    steps = getSteps(sv.ep);
+    var ep2 = EPS[sv.ep];
+    document.getElementById('pEpN').textContent = 'EP ' + String(ep2.n).padStart(2,'0');
+    document.getElementById('pEpT').textContent = ep2.title;
+    document.getElementById('pContent').innerHTML = '';
+    renderSidebar(sv.ep);
+    document.getElementById('landing').classList.remove('active');
+    document.getElementById('player').classList.add('active');
+    if(typeof window !== 'undefined') window.scrollTo(0,0);
+    playSteps();
+  };
+}
+
+// ── INIT ──
+
+function addQuizUnit(questions) {
+  var qIdx = 0;
+  var score = 0;
+  var wrong = [];
+
+  function showQ() {
+    var pc = document.getElementById('pContent');
+    if(!pc) return;
+    // Remove previous quiz elements
+    var old = pc.querySelector('.quiz-wrap');
+    if(old) pc.removeChild(old);
+
+    if(qIdx >= questions.length) {
+      showResult();
+      return;
+    }
+
+    var q = questions[qIdx];
+    var wrap = document.createElement('div');
+    wrap.className = 'quiz-wrap';
+
+    var counter = document.createElement('div');
+    counter.style.cssText = 'font-size:11px;font-family:monospace;color:var(--muted);margin-bottom:10px;';
+    counter.textContent = 'Q' + (qIdx+1) + ' / ' + questions.length + '　　スコア：' + score + '/' + qIdx;
+    wrap.appendChild(counter);
+
+    var qtext = document.createElement('div');
+    qtext.style.cssText = 'font-size:15px;font-weight:700;color:var(--fg);line-height:1.6;margin-bottom:16px;';
+    qtext.textContent = q.q;
+    wrap.appendChild(qtext);
+
+    q.opts.forEach(function(opt, i) {
+      (function(idx, optText) {
+        var btn = document.createElement('button');
+        btn.style.cssText = 'display:block;width:100%;text-align:left;padding:12px 16px;margin-bottom:8px;border:1.5px solid var(--border);border-radius:10px;background:#fff;font-size:13px;cursor:pointer;line-height:1.5;transition:all .15s;';
+        btn.textContent = optText;
+        btn.onmouseover = function(){ btn.style.borderColor = 'var(--accent)'; };
+        btn.onmouseout = function(){ btn.style.borderColor = 'var(--border)'; };
+        btn.onclick = function() {
+          var correct = (idx === q.ans);
+          if(correct) {
+            score++;
+            btn.style.cssText += 'border-color:#16a34a;background:rgba(22,163,74,.08);';
+          } else {
+            btn.style.cssText += 'border-color:#dc2626;background:rgba(220,38,38,.08);';
+            wrong.push({q: q.q, ans: q.opts[q.ans], yours: optText, exp: q.exp||''});
+            // Highlight correct
+            var btns = wrap.querySelectorAll('button');
+            if(btns[q.ans]) btns[q.ans].style.cssText += 'border-color:#16a34a;background:rgba(22,163,74,.08);';
+          }
+          // Disable all buttons
+          var allBtns = wrap.querySelectorAll('button');
+          for(var b=0;b<allBtns.length;b++) allBtns[b].disabled = true;
+
+          // Show explain
+          if(q.exp) {
+            var exp = document.createElement('div');
+            exp.style.cssText = 'margin-top:12px;padding:12px;background:rgba(200,134,10,.07);border-radius:8px;font-size:12px;color:var(--fg);line-height:1.7;border:1px solid rgba(200,134,10,.2);';
+            exp.textContent = q.exp;
+            wrap.appendChild(exp);
+          }
+
+          // Next button
+          setTimeout(function() {
+            var next = document.createElement('button');
+            next.style.cssText = 'margin-top:14px;padding:10px 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;';
+            next.textContent = qIdx + 1 < questions.length ? '次の問題 →' : '結果を見る →';
+            next.onclick = function() { qIdx++; showQ(); };
+            wrap.appendChild(next);
+            var pc2 = document.getElementById('pContent');
+            if(pc2) { pc2.scrollTop = pc2.scrollHeight; }
+          }, 400);
+        };
+        wrap.appendChild(btn);
+      })(i, opt);
+    });
+
+    var pc2 = document.getElementById('pContent');
+    if(pc2) { pc2.appendChild(wrap); pc2.scrollTop = 0; }
+  }
+
+  function showResult() {
+    var pc = document.getElementById('pContent');
+    if(!pc) return;
+    var old = pc.querySelector('.quiz-wrap');
+    if(old) pc.removeChild(old);
+
+    var wrap = document.createElement('div');
+    wrap.className = 'quiz-wrap';
+
+    var pct = Math.round(score / questions.length * 100);
+    var color = pct >= 80 ? '#16a34a' : pct >= 60 ? '#d97706' : '#dc2626';
+    var msg = pct >= 80 ? '素晴らしい！' : pct >= 60 ? 'もう少し！' : '復習しよう';
+
+    var scoreBox = document.createElement('div');
+    scoreBox.style.cssText = 'text-align:center;padding:24px;background:#f8fafc;border-radius:12px;margin-bottom:20px;';
+    scoreBox.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Unit テスト結果</div>'
+      + '<div style="font-size:48px;font-weight:900;color:' + color + ';font-family:monospace;">' + score + '<span style="font-size:24px;color:var(--muted);">/' + questions.length + '</span></div>'
+      + '<div style="font-size:14px;color:' + color + ';margin-top:8px;font-weight:700;">' + msg + '</div>';
+    wrap.appendChild(scoreBox);
+
+    // Wrong answers review
+    if(wrong.length > 0) {
+      var wrongTitle = document.createElement('div');
+      wrongTitle.style.cssText = 'font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px;';
+      wrongTitle.textContent = '間違えた問題（' + wrong.length + '問）';
+      wrap.appendChild(wrongTitle);
+      wrong.forEach(function(w) {
+        var item = document.createElement('div');
+        item.style.cssText = 'padding:12px;border:1px solid rgba(220,38,38,.2);border-radius:8px;margin-bottom:8px;background:rgba(220,38,38,.04);';
+        item.innerHTML = '<div style="font-size:12px;font-weight:700;margin-bottom:6px;">' + w.q + '</div>'
+          + '<div style="font-size:11px;color:#dc2626;">あなた：' + w.yours + '</div>'
+          + '<div style="font-size:11px;color:#16a34a;">正解：' + w.ans + '</div>'
+          + (w.exp ? '<div style="font-size:11px;color:var(--muted);margin-top:6px;">' + w.exp + '</div>' : '');
+        wrap.appendChild(item);
+      });
+    }
+
+    // Retry + Next buttons
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;margin-top:16px;';
+
+    var retry = document.createElement('button');
+    retry.style.cssText = 'flex:1;padding:12px;border:1.5px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;';
+    retry.textContent = '↩ 再挑戦';
+    retry.onclick = function() { qIdx=0; score=0; wrong=[]; showQ(); };
+    btnRow.appendChild(retry);
+
+    var nextEp = document.createElement('button');
+    nextEp.style.cssText = 'flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;';
+    nextEp.textContent = '次のEPへ →';
+    nextEp.onclick = function() { clearProgress(); addEnd(); };
+    btnRow.appendChild(nextEp);
+    wrap.appendChild(btnRow);
+
+    var pc2 = document.getElementById('pContent');
+    if(pc2) { pc2.appendChild(wrap); pc2.scrollTop = 0; }
+  }
+
+  showQ();
+}
+
+
+// ═══════════════════════════════════════════
+// UNIT TESTS
+// ═══════════════════════════════════════════
+
+// ─── 中学生・不眠・メラトベル＋レキサルティ ───
+(function(){
+  var epStat = document.getElementById('epCountStat');
+  if(epStat) epStat.textContent = EPS.length;
+  var rxStat = document.getElementById('rxEpStat');
+  if(rxStat) rxStat.textContent = EPS.length;
+  renderLanding();
+})();
+
+
+// ── EP Done tracking ──
+function getDoneEps() {
+  try { return JSON.parse(localStorage.getItem('rxlogic_done') || '[]'); }
+  catch(e) { return []; }
+}
+function markEpDone(epIdx) {
+  var done = getDoneEps();
+  if (done.indexOf(epIdx) < 0) {
+    done.push(epIdx);
+    localStorage.setItem('rxlogic_done', JSON.stringify(done));
+    var rows = document.querySelectorAll('.ep-row');
+    if (rows[epIdx]) rows[epIdx].classList.add('done');
+  }
+}
+function applyDoneEps() {
+  var done = getDoneEps();
+  var rows = document.querySelectorAll('.ep-row');
+  for (var i = 0; i < done.length; i++) {
+    if (rows[done[i]]) rows[done[i]].classList.add('done');
+  }
+}
+</script>
+
+<footer class="l-footer">
+  <div>© 2026 薬剤師向け学習サイト · 精神科薬剤師のための対話型臨床講座</div>
+</footer>
+
+</body>
+</html>

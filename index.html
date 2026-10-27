@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>薬剤師学習ツール</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@300;400&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans JP',sans-serif;background:#f7f5f0;color:#1a1a1a;min-height:100vh;display:flex;flex-direction:column;}
+.nav{padding:18px 40px;border-bottom:2px solid #ddd9d0;background:rgba(247,245,240,.97);}
+.logo{font-family:'DM Mono',monospace;font-size:14px;color:#6b6560;letter-spacing:.06em;}
+.hero{padding:72px 40px 48px;max-width:800px;margin:0 auto;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(200,134,10,.08);border:1.5px solid rgba(200,134,10,.25);border-radius:24px;padding:6px 18px;font-family:'DM Mono',monospace;font-size:12px;color:#c8860a;margin-bottom:20px;letter-spacing:.04em;}
+h1{font-family:'Shippori Mincho',serif;font-size:clamp(24px,4vw,40px);font-weight:800;line-height:1.3;margin-bottom:16px;color:#1a1a1a;}
+.sub{font-size:16px;color:#6b6560;line-height:1.9;max-width:520px;margin:0 auto 0;}
+.reason{max-width:640px;margin:40px auto 48px;padding:28px 32px;background:#fff;border-left:4px solid #c8860a;border-radius:0 12px 12px 0;box-shadow:0 2px 12px rgba(0,0,0,.06);text-align:left;}
+.reason-q{font-family:'Shippori Mincho',serif;font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.7;margin-bottom:14px;}
+.reason-q em{color:#c8860a;font-style:normal;}
+.reason-a{font-size:14px;color:#6b6560;line-height:1.95;}
+.reason-a strong{color:#1a1a1a;font-weight:600;}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;margin:0 auto;padding:0 40px 80px;}
+.card{background:#fff;border:2px solid #ddd9d0;border-radius:16px;padding:36px 32px;text-decoration:none;color:inherit;transition:all .2s;display:flex;flex-direction:column;gap:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.card:hover{border-color:#c8860a;transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
+.card-icon{font-size:36px;}
+.card-label{font-family:'DM Mono',monospace;font-size:10px;color:#c8860a;letter-spacing:.12em;text-transform:uppercase;}
+.card-title{font-family:'Shippori Mincho',serif;font-size:22px;font-weight:700;line-height:1.3;color:#1a1a1a;}
+.card-desc{font-size:14px;color:#6b6560;line-height:1.8;}
+.card-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.tag{font-size:11px;padding:3px 10px;border-radius:20px;background:#f0ede6;color:#6b6560;font-family:'DM Mono',monospace;}
+.card-btn{margin-top:auto;padding:12px 20px;background:#c8860a;color:#fff;font-size:14px;font-weight:700;text-align:center;border-radius:8px;}
+.card:hover .card-btn{background:#a06d08;}
+.footer{margin-top:auto;padding:24px 40px;border-top:2px solid #ddd9d0;background:#fff;text-align:center;font-size:13px;color:#6b6560;font-family:'DM Mono',monospace;}
+@media(max-width:600px){
+  .cards{grid-template-columns:1fr;padding:0 20px 60px;}
+  .hero{padding:48px 20px 32px;}
+  .nav{padding:16px 20px;}
+  .reason{margin:32px 20px 40px;padding:22px 20px;}
+}
+
+.goal{max-width:640px;margin:0 auto 64px;padding:0 40px;}
+.goal-inner{border-top:2px solid #ddd9d0;padding-top:32px;}
+.goal-lbl{font-family:'DM Mono',monospace;font-size:11px;color:#c8860a;letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px;}
+.goal-body p{font-family:'Shippori Mincho',serif;font-size:17px;color:#2d2d2d;line-height:2;margin-bottom:10px;}
+.goal-body em{color:#c8860a;font-style:normal;font-weight:700;}
+.goal-close{margin-top:20px;padding-top:16px;border-top:1px solid #e8e4dc;}
+.goal-close strong{color:#1a1a1a;}
+@media(max-width:600px){.goal{padding:0 20px;}.goal-body p{font-size:15px;}}
+
+
+
+
+
+@media(max-width:600px){}
+
+    /* Auth & Settings Modals */
+    .fb-modal-overlay, .fb-settings-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      z-index: 9999; display: none; align-items: center;
+      justify-content: center; padding: 20px;
+    }
+    .fb-modal-overlay.open, .fb-settings-overlay.open { display: flex; }
+    .fb-modal-box, .fb-settings-box {
+      background: #fff; border-radius: 16px; padding: 32px;
+      max-width: 420px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+      max-height: 90vh; overflow-y: auto;
+    }
+
+  
+    /* Settings toggles & intervals */
+    .fb-setting-row { padding:14px 0; border-bottom:1px solid #f0f0f0; }
+    .fb-setting-row:last-of-type { border-bottom:none; }
+    .fb-setting-label { font-size:14px; font-weight:700; color:#1a1a1a; margin-bottom:4px; }
+    .fb-setting-desc { font-size:12px; color:#888; line-height:1.6; margin-bottom:6px; }
+    .fb-toggle-row { display:flex; align-items:center; justify-content:space-between; }
+    .fb-toggle {
+      position:relative; width:44px; height:24px;
+      background:#e5e7eb; border-radius:12px;
+      cursor:pointer; transition:background .2s; flex-shrink:0;
+    }
+    .fb-toggle.on { background:#c8860a; }
+    .fb-toggle::after {
+      content:''; position:absolute; top:2px; left:2px;
+      width:20px; height:20px; border-radius:50%;
+      background:#fff; transition:transform .2s;
+      box-shadow:0 1px 3px rgba(0,0,0,.2);
+    }
+    .fb-toggle.on::after { transform:translateX(20px); }
+    .fb-interval-btns { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+    .fb-interval-btn {
+      padding:6px 14px; border:1.5px solid #e5e7eb;
+      border-radius:20px; font-size:12px; cursor:pointer;
+      background:#fff; color:#666; transition:all .15s;
+    }
+    .fb-interval-btn.active {
+      border-color:#c8860a; background:rgba(200,134,10,.08);
+      color:#c8860a; font-weight:700;
+    }
+    .fb-settings-save {
+      width:100%; padding:12px; background:#c8860a; color:#fff;
+      border:none; border-radius:10px; font-size:14px;
+      font-weight:700; cursor:pointer; margin-top:16px;
+    }
+    .fb-settings-close {
+      width:100%; padding:10px; background:none; color:#888;
+      border:1.5px solid #e5e7eb; border-radius:10px;
+      font-size:13px; cursor:pointer; margin-top:8px;
+    }
+    .fb-save-msg { text-align:center; font-size:12px; color:#16a34a; min-height:18px; margin-top:8px; }
+    .fb-settings-sub { font-size:12px; color:#888; margin-bottom:20px; }
+    .fb-settings-box h2 { font-size:18px; font-weight:800; margin-bottom:4px; }
+
+  </style>
+
+  <!-- Firebase SDK -->
+
+  <style>
+    .fb-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px; }
+    .fb-modal-overlay.open { display:flex; }
+    .fb-modal-box { background:#fff;border-radius:16px;padding:32px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3); }
+    .fb-modal-box h2 { font-size:20px;font-weight:800;margin-bottom:6px;color:#1a1a1a; }
+    .fb-modal-box p { font-size:13px;color:#666;margin-bottom:20px; }
+    .fb-input { width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none; }
+    .fb-input:focus { border-color:#c8860a; }
+    .fb-btn-gold { width:100%;padding:13px;background:#c8860a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px; }
+    .fb-btn-sub { width:100%;padding:11px;background:none;color:#666;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;cursor:pointer;margin-top:8px; }
+    .fb-error { color:#dc2626;font-size:12px;margin:6px 0;min-height:16px; }
+    .fb-tab { display:inline-block;padding:6px 16px;border-radius:20px;font-size:13px;cursor:pointer;margin-bottom:20px; }
+    .fb-tab.active { background:#c8860a;color:#fff; }
+    .fb-tab:not(.active) { background:#f5f5f5;color:#666; }
+    #fb-user-bar { display:none;align-items:center;gap:10px;font-size:13px;color:#555; }
+  </style>
+</head>
+<body>
+
+
+<nav class="nav" style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid #f0f0f0;">
+  <div class="logo">薬剤師学習ツール</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>処方箋の向こうに、患者がいる。</h1>
+  <p class="sub">受容体プロファイルで処方意図を読み、患者の言葉を引き出す投薬技術を磨く。<br>精神科薬剤師のための対話型学習ツール。</p>
+</div>
+
+
+
+<div class="cards">
+  <a class="card" href="trial.html">
+    <div class="card-icon">💊</div>
+    <div>
+      <div class="card-label">Pharmacology</div>
+      <div class="card-title">RxLogic</div>
+    </div>
+    <div class="card-desc">精神科処方箋を薬理学で読み解く対話型講座。睡眠薬からSSRI・抗精神病薬・気分安定薬まで全<span id="rx-count">47</span>話。処方意図が見える目を養う。</div>
+    <div class="card-meta">
+      <span class="tag">お試し（EP01）無料</span>
+      <span class="tag">受容体プロファイル</span>
+      <span class="tag">処方演習</span>
+    </div>
+    <div class="card-btn">学習を始める →</div>
+  </a>
+
+</div>
+<footer class="footer">
+  © 2026 薬剤師学習ツール
+</footer>
+
+
+
+
+</body>
+</html>
